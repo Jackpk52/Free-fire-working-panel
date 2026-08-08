@@ -161,6 +161,7 @@ fun SensitivityApp(viewModel: SensitivityViewModel) {
                 )
                 1 -> AimPracticeScreen(
                     sensitivity = currentSensitivity,
+                    crosshairConfig = crosshairConfig,
                     dragTestResult = dragTestResult,
                     onDragTestComplete = { speed, durationMs, accuracy ->
                         viewModel.recordDragTest(speed, durationMs, accuracy)
@@ -176,6 +177,8 @@ fun SensitivityApp(viewModel: SensitivityViewModel) {
                 3 -> HudCustomizerScreen(
                     crosshairConfig = crosshairConfig,
                     fireButtonSize = currentSensitivity.fireButtonSize,
+                    onCrosshairToggleEnabled = { viewModel.toggleCrosshairEnabled(it) },
+                    onCrosshairToggleAutoHeadAlign = { viewModel.toggleAutoHeadAlign(it) },
                     onCrosshairStyleSelected = { viewModel.updateCrosshairStyle(it) },
                     onCrosshairColorSelected = { viewModel.updateCrosshairColor(it) },
                     onCrosshairSizeChange = { viewModel.updateCrosshairSize(it) },

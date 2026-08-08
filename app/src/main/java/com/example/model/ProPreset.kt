@@ -11,6 +11,8 @@ data class ProPreset(
 )
 
 data class CrosshairConfig(
+    val isEnabled: Boolean = true,
+    val isAutoHeadAlignEnabled: Boolean = true,
     val style: CrosshairStyle = CrosshairStyle.CROSS_DOT,
     val colorHex: Long = 0xFF00E676, // Neon Green
     val sizeDp: Int = 18,

@@ -58,6 +58,8 @@ import com.example.ui.theme.TextSecondary
 fun HudCustomizerScreen(
     crosshairConfig: CrosshairConfig,
     fireButtonSize: Int,
+    onCrosshairToggleEnabled: (Boolean) -> Unit,
+    onCrosshairToggleAutoHeadAlign: (Boolean) -> Unit,
     onCrosshairStyleSelected: (CrosshairStyle) -> Unit,
     onCrosshairColorSelected: (Long) -> Unit,
     onCrosshairSizeChange: (Int) -> Unit,
@@ -79,6 +81,8 @@ fun HudCustomizerScreen(
         item {
             CrosshairPreviewCanvas(
                 config = crosshairConfig,
+                onToggleEnabled = onCrosshairToggleEnabled,
+                onToggleAutoHeadAlign = onCrosshairToggleAutoHeadAlign,
                 onStyleSelected = onCrosshairStyleSelected,
                 onColorSelected = onCrosshairColorSelected,
                 onSizeChange = onCrosshairSizeChange,

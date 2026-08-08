@@ -182,6 +182,16 @@ class SensitivityViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     // Crosshair config methods
+    fun toggleCrosshairEnabled(enabled: Boolean) {
+        _crosshairConfig.update { it.copy(isEnabled = enabled) }
+        _toastMessage.value = if (enabled) "Custom Crosshair Overlay ACTIVE" else "Custom Crosshair Overlay DISABLED"
+    }
+
+    fun toggleAutoHeadAlign(enabled: Boolean) {
+        _crosshairConfig.update { it.copy(isAutoHeadAlignEnabled = enabled) }
+        _toastMessage.value = if (enabled) "Auto-Headlock Alignment ASSIST ON" else "Auto-Headlock Alignment OFF"
+    }
+
     fun updateCrosshairStyle(style: CrosshairStyle) {
         _crosshairConfig.update { it.copy(style = style) }
     }

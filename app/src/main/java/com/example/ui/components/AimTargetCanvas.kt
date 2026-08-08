@@ -45,6 +45,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.model.CrosshairConfig
+import com.example.model.CrosshairStyle
 import com.example.ui.theme.CyberGold
 import com.example.ui.theme.CyberRed
 import com.example.ui.theme.DarkCanvas
@@ -61,6 +63,7 @@ import kotlin.math.hypot
 @Composable
 fun AimTargetCanvas(
     sensitivityGeneral: Int,
+    crosshairConfig: CrosshairConfig,
     onDragTestComplete: (speed: Float, durationMs: Long, accuracy: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -149,16 +152,20 @@ fun AimTargetCanvas(
 
                                 // Calculate Headshot Accuracy based on drag vector and Sensitivity scaling
                                 val sensFactor = sensitivityGeneral / 100f
-                                val adjustedSpeed = speedPxPerMs * sensFactor
+                                val autoHeadBoost = if (crosshairConfig.isAutoHeadAlignEnabled) 1.25f else 1.0f
+                                val adjustedSpeed = speedPxPerMs * sensFactor * autoHeadBoost
 
                                 // Target center is top center of canvas
-                                val isUpward = dy > 40f
-                                val accuracy = when {
-                                    !isUpward -> 20
-                                    adjustedSpeed in 1.2f..4.8f -> (85..100).random()
-                                    adjustedSpeed in 0.6f..1.19f -> (50..75).random()
-                                    else -> (15..40).random()
+                                val isUpward = dy > 30f
+                                val rawAcc = when {
+                                    !isUpward -> 25
+                                    adjustedSpeed in 1.1f..5.2f -> (88..100).random()
+                                    adjustedSpeed in 0.5f..1.09f -> (55..80).random()
+                                    else -> (20..50).random()
                                 }
+                                val accuracy = if (crosshairConfig.isAutoHeadAlignEnabled && isUpward) {
+                                    (rawAcc + 15).coerceAtMost(100)
+                                } else rawAcc
 
                                 totalShots++
                                 if (accuracy >= 80) headshotCount++
@@ -261,6 +268,39 @@ fun AimTargetCanvas(
                         center = fireBtnCenter,
                         style = Stroke(width = 4f)
                     )
+
+                    // Draw Custom Crosshair Overlay on Target Canvas
+                    if (crosshairConfig.isEnabled) {
+                        val crosshairPos = if (crosshairConfig.isAutoHeadAlignEnabled) {
+                            Offset(targetCenterX, targetY)
+                        } else {
+                            touchPath.lastOrNull() ?: Offset(targetCenterX, targetY)
+                        }
+                        val chColor = Color(crosshairConfig.colorHex)
+                        val sizePx = crosshairConfig.sizeDp.dp.toPx()
+                        val gapPx = crosshairConfig.gapDp.dp.toPx()
+                        val strokePx = crosshairConfig.strokeWidthDp.dp.toPx()
+                        val dotPx = crosshairConfig.dotSizeDp.dp.toPx()
+
+                        when (crosshairConfig.style) {
+                            CrosshairStyle.CROSS_DOT, CrosshairStyle.CLASSIC_CROSS -> {
+                                if (crosshairConfig.style == CrosshairStyle.CROSS_DOT) {
+                                    drawCircle(color = chColor, radius = dotPx, center = crosshairPos)
+                                }
+                                drawLine(color = chColor, start = Offset(crosshairPos.x, crosshairPos.y - gapPx), end = Offset(crosshairPos.x, crosshairPos.y - gapPx - sizePx), strokeWidth = strokePx)
+                                drawLine(color = chColor, start = Offset(crosshairPos.x, crosshairPos.y + gapPx), end = Offset(crosshairPos.x, crosshairPos.y + gapPx + sizePx), strokeWidth = strokePx)
+                                drawLine(color = chColor, start = Offset(crosshairPos.x - gapPx, crosshairPos.y), end = Offset(crosshairPos.x - gapPx - sizePx, crosshairPos.y), strokeWidth = strokePx)
+                                drawLine(color = chColor, start = Offset(crosshairPos.x + gapPx, crosshairPos.y), end = Offset(crosshairPos.x + gapPx + sizePx, crosshairPos.y), strokeWidth = strokePx)
+                            }
+                            CrosshairStyle.CIRCLE_DOT -> {
+                                drawCircle(color = chColor, radius = dotPx, center = crosshairPos)
+                                drawCircle(color = chColor, radius = sizePx, center = crosshairPos, style = Stroke(width = strokePx))
+                            }
+                            CrosshairStyle.PURE_DOT -> {
+                                drawCircle(color = chColor, radius = sizePx * 0.6f, center = crosshairPos)
+                            }
+                        }
+                    }
 
                     // Draw Touch Drag Trail
                     if (touchPath.size > 1) {

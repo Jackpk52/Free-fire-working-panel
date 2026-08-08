@@ -46,12 +46,15 @@ import com.example.ui.theme.DarkSurfaceBorder
 import com.example.ui.theme.DarkSurfaceVariant
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.NeonGreen
+import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 
 @Composable
 fun CrosshairPreviewCanvas(
     config: CrosshairConfig,
+    onToggleEnabled: (Boolean) -> Unit,
+    onToggleAutoHeadAlign: (Boolean) -> Unit,
     onStyleSelected: (CrosshairStyle) -> Unit,
     onColorSelected: (Long) -> Unit,
     onSizeChange: (Int) -> Unit,
@@ -67,23 +70,93 @@ fun CrosshairPreviewCanvas(
         border = androidx.compose.foundation.BorderStroke(1.dp, DarkSurfaceBorder)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Header
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.CenterFocusStrong,
-                    contentDescription = null,
-                    tint = ElectricCyan,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "CUSTOM CROSSHAIR OVERLAY PREVIEW",
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimary
+            // Header with On/Off Switch
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.CenterFocusStrong,
+                        contentDescription = null,
+                        tint = if (config.isEnabled) ElectricCyan else TextMuted,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "CUSTOM CROSSHAIR OVERLAY",
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = if (config.isEnabled) "OVERLAY ACTIVE" else "DISABLED",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (config.isEnabled) NeonGreen else TextMuted
+                        )
+                    }
+                }
+
+                androidx.compose.material3.Switch(
+                    checked = config.isEnabled,
+                    onCheckedChange = { onToggleEnabled(it) },
+                    colors = androidx.compose.material3.SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = ElectricCyan,
+                        uncheckedThumbColor = TextMuted,
+                        uncheckedTrackColor = DarkSurfaceVariant
+                    )
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
+
+            // Auto-Headshot Target Alignment Assist Switch Card
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        if (config.isAutoHeadAlignEnabled) CyberRed.copy(alpha = 0.15f) else DarkSurfaceVariant,
+                        RoundedCornerShape(12.dp)
+                    )
+                    .border(
+                        1.dp,
+                        if (config.isAutoHeadAlignEnabled) CyberRed.copy(alpha = 0.5f) else DarkSurfaceBorder,
+                        RoundedCornerShape(12.dp)
+                    )
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Auto-Headlock Target Alignment",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (config.isAutoHeadAlignEnabled) CyberRed else TextPrimary
+                    )
+                    Text(
+                        text = "Dynamically snap crosshair onto enemy head box for instant red numbers",
+                        fontSize = 10.sp,
+                        color = TextSecondary
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                androidx.compose.material3.Switch(
+                    checked = config.isAutoHeadAlignEnabled,
+                    onCheckedChange = { onToggleAutoHeadAlign(it) },
+                    colors = androidx.compose.material3.SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = CyberRed,
+                        uncheckedThumbColor = TextMuted,
+                        uncheckedTrackColor = DarkSurfaceBorder
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Crosshair Live Canvas Box
             Box(
@@ -94,62 +167,71 @@ fun CrosshairPreviewCanvas(
                     .border(1.dp, DarkSurfaceBorder, RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    val center = Offset(size.width / 2f, size.height / 2f)
-                    val crosshairColor = Color(config.colorHex)
-                    val sizePx = config.sizeDp.dp.toPx()
-                    val gapPx = config.gapDp.dp.toPx()
-                    val strokePx = config.strokeWidthDp.dp.toPx()
-                    val dotPx = config.dotSizeDp.dp.toPx()
+                if (!config.isEnabled) {
+                    Text(
+                        text = "Crosshair Overlay Disabled",
+                        fontSize = 12.sp,
+                        color = TextMuted,
+                        fontWeight = FontWeight.Medium
+                    )
+                } else {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val center = Offset(size.width / 2f, size.height / 2f)
+                        val crosshairColor = Color(config.colorHex)
+                        val sizePx = config.sizeDp.dp.toPx()
+                        val gapPx = config.gapDp.dp.toPx()
+                        val strokePx = config.strokeWidthDp.dp.toPx()
+                        val dotPx = config.dotSizeDp.dp.toPx()
 
-                    when (config.style) {
-                        CrosshairStyle.CROSS_DOT, CrosshairStyle.CLASSIC_CROSS -> {
-                            // Draw Center Dot
-                            if (config.style == CrosshairStyle.CROSS_DOT) {
-                                drawCircle(color = crosshairColor, radius = dotPx, center = center)
+                        when (config.style) {
+                            CrosshairStyle.CROSS_DOT, CrosshairStyle.CLASSIC_CROSS -> {
+                                // Draw Center Dot
+                                if (config.style == CrosshairStyle.CROSS_DOT) {
+                                    drawCircle(color = crosshairColor, radius = dotPx, center = center)
+                                }
+                                // Top line
+                                drawLine(
+                                    color = crosshairColor,
+                                    start = Offset(center.x, center.y - gapPx),
+                                    end = Offset(center.x, center.y - gapPx - sizePx),
+                                    strokeWidth = strokePx
+                                )
+                                // Bottom line
+                                drawLine(
+                                    color = crosshairColor,
+                                    start = Offset(center.x, center.y + gapPx),
+                                    end = Offset(center.x, center.y + gapPx + sizePx),
+                                    strokeWidth = strokePx
+                                )
+                                // Left line
+                                drawLine(
+                                    color = crosshairColor,
+                                    start = Offset(center.x - gapPx, center.y),
+                                    end = Offset(center.x - gapPx - sizePx, center.y),
+                                    strokeWidth = strokePx
+                                )
+                                // Right line
+                                drawLine(
+                                    color = crosshairColor,
+                                    start = Offset(center.x + gapPx, center.y),
+                                    end = Offset(center.x + gapPx + sizePx, center.y),
+                                    strokeWidth = strokePx
+                                )
                             }
-                            // Top line
-                            drawLine(
-                                color = crosshairColor,
-                                start = Offset(center.x, center.y - gapPx),
-                                end = Offset(center.x, center.y - gapPx - sizePx),
-                                strokeWidth = strokePx
-                            )
-                            // Bottom line
-                            drawLine(
-                                color = crosshairColor,
-                                start = Offset(center.x, center.y + gapPx),
-                                end = Offset(center.x, center.y + gapPx + sizePx),
-                                strokeWidth = strokePx
-                            )
-                            // Left line
-                            drawLine(
-                                color = crosshairColor,
-                                start = Offset(center.x - gapPx, center.y),
-                                end = Offset(center.x - gapPx - sizePx, center.y),
-                                strokeWidth = strokePx
-                            )
-                            // Right line
-                            drawLine(
-                                color = crosshairColor,
-                                start = Offset(center.x + gapPx, center.y),
-                                end = Offset(center.x + gapPx + sizePx, center.y),
-                                strokeWidth = strokePx
-                            )
-                        }
-                        CrosshairStyle.CIRCLE_DOT -> {
-                            // Center Dot
-                            drawCircle(color = crosshairColor, radius = dotPx, center = center)
-                            // Circle Outer Ring
-                            drawCircle(
-                                color = crosshairColor,
-                                radius = sizePx,
-                                center = center,
-                                style = Stroke(width = strokePx)
-                            )
-                        }
-                        CrosshairStyle.PURE_DOT -> {
-                            drawCircle(color = crosshairColor, radius = sizePx * 0.6f, center = center)
+                            CrosshairStyle.CIRCLE_DOT -> {
+                                // Center Dot
+                                drawCircle(color = crosshairColor, radius = dotPx, center = center)
+                                // Circle Outer Ring
+                                drawCircle(
+                                    color = crosshairColor,
+                                    radius = sizePx,
+                                    center = center,
+                                    style = Stroke(width = strokePx)
+                                )
+                            }
+                            CrosshairStyle.PURE_DOT -> {
+                                drawCircle(color = crosshairColor, radius = sizePx * 0.6f, center = center)
+                            }
                         }
                     }
                 }

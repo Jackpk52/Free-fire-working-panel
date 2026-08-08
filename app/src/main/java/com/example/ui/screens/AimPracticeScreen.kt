@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.model.CrosshairConfig
 import com.example.model.SensitivityData
 import com.example.ui.DragTestResult
 import com.example.ui.components.AimTargetCanvas
@@ -51,6 +52,7 @@ import com.example.ui.theme.TextSecondary
 @Composable
 fun AimPracticeScreen(
     sensitivity: SensitivityData,
+    crosshairConfig: CrosshairConfig,
     dragTestResult: DragTestResult?,
     onDragTestComplete: (speed: Float, durationMs: Long, accuracy: Int) -> Unit,
     modifier: Modifier = Modifier
@@ -67,6 +69,7 @@ fun AimPracticeScreen(
         item {
             AimTargetCanvas(
                 sensitivityGeneral = sensitivity.general,
+                crosshairConfig = crosshairConfig,
                 onDragTestComplete = onDragTestComplete
             )
         }
