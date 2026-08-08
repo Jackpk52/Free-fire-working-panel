@@ -1,0 +1,6 @@
+{
+  "name": "Headshot Sensitivity Panel",
+  "description": "Precision sensitivity customizer, DPI auto-calculator, and aim drag practice for mobile battle royale games.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
