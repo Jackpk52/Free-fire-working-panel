@@ -26,7 +26,14 @@ jobs:
     - name: Grant Execute Permission for Gradle
       run: chmod +x ./gradlew
 
-    # 2. This builds the APK and applies the headless KSP fix
+    # 2. Generate Debug Keystore
+    - name: Generate Debug Keystore
+      run: |
+        keytool -genkey -v -keystore debug.keystore -keyalg RSA -keysize 2048 -validity 10000 \
+          -alias androiddebugkey -keypass android -storepass android \
+          -dname "CN=Android Debug,O=Android,C=US"
+
+    # 3. This builds the APK and applies the headless KSP fix
     - name: Build Debug APK with Headless KSP Flag
       run: ./gradlew assembleDebug -Dorg.jetbrains.kotlin.ksp.command.line.mode=true
 
